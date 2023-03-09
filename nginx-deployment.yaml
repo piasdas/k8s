@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment  # Name of the deployment
+  labels:
+    app: nginx  # Label for the deployment
+spec:
+  replicas: 3  # Number of replicas for the deployment
+  selector:
+    matchLabels:
+      app: nginx  # Selector to match the label of the pods
+  template:
+    metadata:
+      labels:
+        app: nginx  # Label for the pods
+    spec:
+      containers:
+      - name: nginx  # Name of the container
+        image: nginx:latest  # Image name and tag
+        ports:
+        - containerPort: 80  # Port to expose on the container
+        resources:  # Define resource requests and limits for the container
+          requests:  # Resource requests
+            cpu: "100m"  # CPU request in millicores
+            memory: "128Mi"  # Memory request in MiB
+          limits:  # Resource limits
+            cpu: "500m"  # CPU limit in millicores
+            memory: "512Mi"  # Memory limit in MiB
