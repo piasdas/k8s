@@ -1,0 +1,18 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: nginx-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /  # Rewrite the request URL before forwarding to the backend service
+spec:
+  rules:
+    - host: cloudcube.io  # The domain name that the Ingress should handle traffic for
+      http:
+        paths:
+          - path: /nginx  # The URL path that should be routed to the Nginx service
+            pathType: Prefix  # Match requests with a URL path prefix
+            backend:
+              service:
+                name: nginx-service  # The name of the Service that the Ingress should route traffic to
+                port:
+                  name: http  # The name of the port that the Service is using

@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mariadb-deployment
+  namespace: mariadb-namespace
+  labels:
+    app: mariadb
+  annotations:
+    description: Deployment for MariaDB database server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mariadb
+  template:
+    metadata:
+      labels:
+        app: mariadb
+      annotations:
+        creator: my-username
+    spec:
+      containers:
+        - name: mariadb
+          image: mariadb:latest
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              value: piasxp
+          ports:
+            - containerPort: 3306
+              name: mysql
+          volumeMounts:
+            - name: mariadb-persistent-storage
+              mountPath: /var/lib/mysql
+          resources:
+            limits:
+              cpu: "1"
+              memory: "512Mi"
+              ephemeral-storage: "1Gi"
+            requests:
+              cpu: "500m"
+              memory: "256Mi"
+              ephemeral-storage: "500Mi"
+      volumes:
+        - name: mariadb-persistent-storage
+          persistentVolumeClaim:
+            claimName: mariadb-pvc

@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-service
+spec:
+  selector:
+    app: nginx  # Selects the pods to target based on their labels
+  ports:
+    - name: http  # A friendly name for the port
+      protocol: TCP  # The protocol used for the port
+      port: 80  # The port number used by the service
+      targetPort: 80  # The port number used by the pods
+  type: LoadBalancer  # Exposes the service externally using a cloud provider's load balancer
