@@ -1,0 +1,225 @@
+Great, let's get started then.
+
+Step 1: Deploying Elasticsearch
+First, we will deploy Elasticsearch. Here's an example YAML file for deploying Elasticsearch in Kubernetes:
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: elasticsearch
+spec:
+  selector:
+    matchLabels:
+      app: elasticsearch
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: elasticsearch
+    spec:
+      containers:
+      - name: elasticsearch
+        image: docker.elastic.co/elasticsearch/elasticsearch:7.14.2
+        ports:
+        - containerPort: 9200
+          name: rest
+        - containerPort: 9300
+          name: inter-node
+        resources:
+          limits:
+            memory: 2Gi
+          requests:
+            cpu: 100m
+            memory: 2Gi
+        env:
+        - name: discovery.type
+          value: single-node
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: elasticsearch
+spec:
+  selector:
+    app: elasticsearch
+  ports:
+  - port: 9200
+    name: rest
+  - port: 9300
+    name: inter-node
+
+
+This will create a deployment and service for Elasticsearch. Save the above YAML code to a file named elasticsearch.yaml.
+
+Step 2: Deploying Logstash
+
+Next, we will deploy Logstash. Here's an example YAML file for deploying Logstash in Kubernetes:
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: logstash
+spec:
+  selector:
+    matchLabels:
+      app: logstash
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: logstash
+    spec:
+      containers:
+      - name: logstash
+        image: docker.elastic.co/logstash/logstash:7.14.2
+        volumeMounts:
+        - name: config
+          mountPath: /usr/share/logstash/pipeline/
+        ports:
+        - containerPort: 5044
+          name: beats
+        resources:
+          limits:
+            memory: 2Gi
+          requests:
+            cpu: 100m
+            memory: 2Gi
+      volumes:
+      - name: config
+        configMap:
+          name: logstash-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: logstash
+spec:
+  selector:
+    app: logstash
+  ports:
+  - port: 5044
+    name: beats
+
+
+This will create a deployment and service for Logstash. Save the above YAML code to a file named logstash.yaml.
+
+Step 3: Deploying Kibana
+
+Lastly, we will deploy Kibana. Here's an example YAML file for deploying Kibana in Kubernetes:
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kibana
+spec:
+  selector:
+    matchLabels:
+      app: kibana
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: kibana
+    spec:
+      containers:
+      - name: kibana
+        image: docker.elastic.co/kibana/kibana:7.14.2
+        ports:
+        - containerPort: 5601
+          name: http
+        resources:
+          limits:
+            memory: 2Gi
+          requests:
+            cpu: 100m
+            memory: 2Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kibana
+spec:
+  selector:
+    app: kibana
+  ports:
+  - port: 5601
+    name: http
+
+
+
+Save this file to a file named kibana.yaml.
+
+Step 4: Creating ConfigMaps
+
+Now we will create two ConfigMaps, one for Elasticsearch and one for Logstash. These ConfigMaps will contain the configuration files for Elasticsearch and Logstash respectively.
+
+Create a file named elasticsearch.yml with the following contents:
+
+
+
+cluster.name: "docker-cluster"
+network.host: 0.0.0.0
+discovery.seed_hosts: elasticsearch
+
+Create a file named logstash.conf with the following contents:
+
+
+input {
+  beats {
+    port => 5044
+  }
+}
+
+output {
+  elasticsearch {
+    hosts => ["elasticsearch:9200"]
+    index => "%{[@metadata][beat]}-%{[@metadata][version]}-%{+YYYY.MM.dd}"
+  }
+}
+
+
+$ kubectl create configmap elasticsearch-config --from-file=elasticsearch.yml
+$ kubectl create configmap logstash-config --from-file=logstash.conf
+
+Step 5: Creating PersistentVolumeClaims
+
+We will create a PersistentVolumeClaim (PVC) for Elasticsearch. This PVC will be used to store Elasticsearch data.
+
+Create a file named elasticsearch-pvc.yaml with the following contents:
+
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: elasticsearch-data
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+
+
+Save the file and then create the PVC using the following command:
+
+$ kubectl apply -f elasticsearch-pvc.yaml
+
+
+Step 7: Accessing Kibana
+
+To access Kibana, we need to expose the Kibana service. We can do this using port forwarding.
+
+First, find the name of the Kibana pod using the following command:
+
+
+$ kubectl get pods -l app=kibana
+
+
+Then use port forwarding to expose the Kibana service:
+
+$ kubectl port-forward <kibana-pod-name> 5601:5601
+
+
+Now you can access Kibana by opening a web browser and navigating to http://localhost:5601.
+
+That's it! You now have ELK
